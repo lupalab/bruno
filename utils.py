@@ -52,6 +52,20 @@ def load_fashion_mnist():
     y_test = load_mnist_labels('data/fashion_mnist/t10k-labels-idx1-ubyte.gz')
     return (X_train, y_train), (X_test, y_test)
 
+def load_point_clouds(filename):
+    with open(filename, 'rb') as f:
+        data = pkl.load(f)
+    return data
+
+def load_planes():
+    data = load_point_clouds('data/planes')
+    X_train = np.float32(data['train'])
+    y_train = [1 for x in range(np.shape(X_train)[0])]
+    X_test = np.float32(data['test'])
+    y_test = [1 for x in range(np.shape(X_test)[0])]
+
+    return (X_train, y_train), (X_test, y_test)
+
 
 def unpickle(file):
     fo = open(file, 'rb')

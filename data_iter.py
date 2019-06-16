@@ -322,6 +322,14 @@ class BaseExchSeqDataIterator(object):
             self.x = np.float32(self.x)
             self.img_shape = self.x.shape[1:]
             self.input_dim = np.prod(self.img_shape)
+        elif dataset == 'planes':
+            (x_train, y_train), (x_test, y_test) = utils.load_planes()
+            if set == 'train':
+                self.x = x_train
+                self.y = y_train
+            elif set == 'test':
+                self.x = x_test
+                self.y = y_test
         else:
             raise ValueError('wrong dataset name')
 
@@ -330,7 +338,6 @@ class BaseExchSeqDataIterator(object):
             self.img_shape = (int(np.sqrt(self.input_dim)), int(np.sqrt(self.input_dim)), 1)
             self.x = np.reshape(self.x, (self.x.shape[0],) + self.img_shape)
             self.x = np.float32(self.x)
-
         self.classes = np.unique(self.y)
         self.n_classes = len(self.classes)
         self.y2idxs = {}
@@ -353,7 +360,10 @@ class BaseExchSeqDataIterator(object):
         print('--------------')
 
     def get_observation_size(self):
-        return (self.seq_len,) + self.img_shape
+        if dataset == 'mnist' or dataset == 'fashion_mnist':
+            return (self.seq_len,) + self.img_shape
+        elif dataset == 'planes':
+            return (self.seq_len, 1000, 3)
 
     def generate(self, rng=None, noise_rng=None):
         rng = self.rng if rng is None else rng
@@ -471,6 +481,8 @@ class BaseTestBatchSeqDataIterator(object):
             (x_train, y_train), (x_test, y_test) = utils.load_fashion_mnist()
         elif dataset == 'mnist':
             (x_train, y_train), (x_test, y_test) = utils.load_mnist()
+        elif dataset == 'planes':
+            (x_train, y_train), (x_test, y_test) = utils.load_planes()
         else:
             raise ValueError('wrong dataset name')
 
@@ -488,13 +500,14 @@ class BaseTestBatchSeqDataIterator(object):
             self.x = x_test
             self.y = y_test
 
-        self.input_dim = self.x.shape[-1]
-        self.img_shape = (int(np.sqrt(self.input_dim)), int(np.sqrt(self.input_dim)), 1)
-        self.x = np.reshape(self.x, (self.x.shape[0],) + self.img_shape)
-        self.x = np.float32(self.x)
+        if dataset == 'fashion_mnist' or dataset == 'mnist':
+            self.input_dim = self.x.shape[-1]
+            self.img_shape = (int(np.sqrt(self.input_dim)), int(np.sqrt(self.input_dim)), 1)
+            self.x = np.reshape(self.x, (self.x.shape[0],) + self.img_shape)
+            self.x = np.float32(self.x)
 
-        self.x_train = np.reshape(self.x_train, (self.x_train.shape[0],) + self.img_shape)
-        self.x_train = np.float32(self.x_train)
+            self.x_train = np.reshape(self.x_train, (self.x_train.shape[0],) + self.img_shape)
+            self.x_train = np.float32(self.x_train)
 
         self.y2idxs = {}
         for i in range(10):
