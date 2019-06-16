@@ -58,7 +58,7 @@ def load_point_clouds(filename):
     return data
 
 def load_planes():
-    data = load_point_clouds('data/planes')
+    data = load_point_clouds('../Data_5_9_19/plane.p')
     X_train = np.float32(data['train'])
     y_train = [1 for x in range(np.shape(X_train)[0])]
     X_test = np.float32(data['test'])
