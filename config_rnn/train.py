@@ -9,8 +9,8 @@ import time
 import numpy as np
 import tensorflow as tf
 
-from . import logger
-from . import utils
+import bruno.config_rnn.logger as logger
+import bruno.utils as utils
 
 # -----------------------------------------------------------------------------
 parser = argparse.ArgumentParser()
