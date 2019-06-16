@@ -10,7 +10,7 @@ import numpy as np
 import tensorflow as tf
 
 from . import logger
-import utils
+from . import utils
 
 # -----------------------------------------------------------------------------
 parser = argparse.ArgumentParser()
