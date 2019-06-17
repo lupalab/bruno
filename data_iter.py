@@ -299,7 +299,7 @@ class OmniglotEpisodesDataIterator(OmniglotTestBatchSeqDataIterator):
 class BaseExchSeqDataIterator(object):
     def __init__(self, seq_len, batch_size, dataset='mnist', set='train',
                  rng=None, infinite=True, digits=None):
-
+        '''
         if dataset == 'fashion_mnist':
             (x_train, y_train), (x_test, y_test) = utils.load_fashion_mnist()
             if set == 'train':
@@ -323,6 +323,8 @@ class BaseExchSeqDataIterator(object):
             self.img_shape = self.x.shape[1:]
             self.input_dim = np.prod(self.img_shape)
         elif dataset == 'planes':
+        '''
+        if dataset == 'planes':
             (x_train, y_train), (x_test, y_test) = utils.load_planes()
             if set == 'train':
                 self.x = x_train
@@ -476,11 +478,14 @@ class BaseExchSeqDataIterator(object):
 class BaseTestBatchSeqDataIterator(object):
     def __init__(self, seq_len, set='train', dataset='mnist', rng=None, infinite=True, digits=None):
 
+        '''
         if dataset == 'fashion_mnist':
             (x_train, y_train), (x_test, y_test) = utils.load_fashion_mnist()
         elif dataset == 'mnist':
             (x_train, y_train), (x_test, y_test) = utils.load_mnist()
         elif dataset == 'planes':
+        '''
+        if dataset == 'planes':
             (x_train, y_train), (x_test, y_test) = utils.load_planes()
         else:
             raise ValueError('wrong dataset name')
