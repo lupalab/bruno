@@ -20,15 +20,16 @@ nonlinearity = tf.nn.elu
 weight_norm = True
 
 train_data_iter = data_iter.BaseExchSeqDataIterator(seq_len=seq_len, batch_size=batch_size,
-                                                    set='train', rng=rng)
-test_data_iter = data_iter.BaseExchSeqDataIterator(seq_len=seq_len, batch_size=batch_size, set='test', rng=rng_test)
+                                                    set='train', rng=rng, dataset='planes')
+test_data_iter = data_iter.BaseExchSeqDataIterator(seq_len=seq_len, batch_size=batch_size, set='test', rng=rng_test,
+                                                    dataset='planes')
 
 valid_data_iter = data_iter.BaseExchSeqDataIterator(seq_len=seq_len, batch_size=batch_size,
-                                                    set='test', rng=rng)
+                                                    set='test', rng=rng, dataset='planes')
 
 test_data_iter2 = data_iter.BaseTestBatchSeqDataIterator(seq_len=seq_len,
                                                          set='test',
-                                                         rng=rng)
+                                                         rng=rng, dataset='planes')
 
 obs_shape = train_data_iter.get_observation_size()  # (seq_len, 1000, 3)
 print('obs shape', obs_shape)
