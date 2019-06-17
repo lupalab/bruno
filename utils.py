@@ -240,6 +240,7 @@ def process_omniglot_vinyals_split():
     np.save('data/omniglot_x_test', x_test)
     np.save('data/omniglot_y_test', y_test)
 
-
+'''
 if __name__ == '__main__':
     process_omniglot_vinyals_split()
+'''

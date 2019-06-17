@@ -2,7 +2,7 @@ import numpy as np
 
 import utils
 
-
+'''
 class OmniglotExchSeqDataIterator(object):
     def __init__(self, seq_len, batch_size, set='train', valid_split=False, rng=None, augment=True, infinite=True):
 
@@ -294,7 +294,7 @@ class OmniglotEpisodesDataIterator(OmniglotTestBatchSeqDataIterator):
             y_meta_batch = np.reshape(y_meta_batch, (self.meta_batch_size * self.batch_size, self.seq_len))
 
             yield x_meta_batch, y_meta_batch
-
+'''
 
 class BaseExchSeqDataIterator(object):
     def __init__(self, seq_len, batch_size, dataset='mnist', set='train',
@@ -472,7 +472,6 @@ class BaseExchSeqDataIterator(object):
 
             if not self.infinite:
                 break
-
 
 class BaseTestBatchSeqDataIterator(object):
     def __init__(self, seq_len, set='train', dataset='mnist', rng=None, infinite=True, digits=None):
