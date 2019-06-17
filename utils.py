@@ -23,7 +23,7 @@ def find_model_metadata(metadata_dir, config_name):
         raise ValueError('Multiple metadata files for config %s' % config_name)
     return metadata_paths[0]
 
-
+'''
 def load_mnist_images(filename):
     with gzip.open(filename, 'rb') as f:
         data = np.frombuffer(f.read(), np.uint8, offset=16)
@@ -51,6 +51,7 @@ def load_fashion_mnist():
     X_test = load_mnist_images('data/fashion_mnist/t10k-images-idx3-ubyte.gz')
     y_test = load_mnist_labels('data/fashion_mnist/t10k-labels-idx1-ubyte.gz')
     return (X_train, y_train), (X_test, y_test)
+'''
 
 def load_point_clouds(filename):
     with open(filename, 'rb') as f:
