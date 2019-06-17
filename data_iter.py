@@ -324,6 +324,7 @@ class BaseExchSeqDataIterator(object):
             self.input_dim = np.prod(self.img_shape)
         elif dataset == 'planes':
         '''
+        self.dataset = dataset
         if dataset == 'planes':
             (x_train, y_train), (x_test, y_test) = utils.load_planes()
             if set == 'train':
@@ -362,9 +363,9 @@ class BaseExchSeqDataIterator(object):
         print('--------------')
 
     def get_observation_size(self):
-        if dataset == 'mnist' or dataset == 'fashion_mnist':
+        if self.dataset == 'mnist' or self.dataset == 'fashion_mnist':
             return (self.seq_len,) + self.img_shape
-        elif dataset == 'planes':
+        elif self.dataset == 'planes':
             return (self.seq_len, 1000, 3)
 
     def generate(self, rng=None, noise_rng=None):
@@ -485,6 +486,7 @@ class BaseTestBatchSeqDataIterator(object):
             (x_train, y_train), (x_test, y_test) = utils.load_mnist()
         elif dataset == 'planes':
         '''
+        self.dataset = dataset
         if dataset == 'planes':
             (x_train, y_train), (x_test, y_test) = utils.load_planes()
         else:
