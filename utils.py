@@ -55,7 +55,7 @@ def load_fashion_mnist():
 
 def load_point_clouds(filename):
     with open(filename, 'rb') as f:
-        data = pkl.load(f)
+        data = pkl.load(f, encoding='latin')
     return data
 
 def load_planes():
