@@ -366,7 +366,7 @@ class BaseExchSeqDataIterator(object):
         if self.dataset == 'mnist' or self.dataset == 'fashion_mnist':
             return (self.seq_len,) + self.img_shape
         elif self.dataset == 'planes':
-            return (self.seq_len, 1000, 3)
+            return (self.seq_len,) + self.x.shape
 
     def generate(self, rng=None, noise_rng=None):
         rng = self.rng if rng is None else rng
