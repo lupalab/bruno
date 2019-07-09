@@ -61,11 +61,17 @@ def load_point_clouds(filename):
 def load_planes():
     data = load_point_clouds('../data/plane.p')
     X_train = np.float32(data['train'])
-    y_train = [1 for x in range(np.shape(X_train)[0])]
+    y_train = [0 for x in range(np.shape(X_train)[0])]
     X_test = np.float32(data['test'])
-    y_test = [1 for x in range(np.shape(X_test)[0])]
+    y_test = [0 for x in range(np.shape(X_test)[0])]
 
-    return (X_train, y_train), (X_test, y_test)
+    X_train -= np.mean(X_train)
+    X_test -= np.mean(X_test)
+
+    X_train /= np.max(np.abs(X_train))
+    X_test /= np.max(np.abs(X_test))
+
+    return (X_train[:, :1000, :], y_train), (X_test[:, :1000, :], y_test)
 
 
 def unpickle(file):
