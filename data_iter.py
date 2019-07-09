@@ -2,7 +2,7 @@ import numpy as np
 
 import utils
 
-'''
+
 class OmniglotExchSeqDataIterator(object):
     def __init__(self, seq_len, batch_size, set='train', valid_split=False, rng=None, augment=True, infinite=True):
 
@@ -294,12 +294,12 @@ class OmniglotEpisodesDataIterator(OmniglotTestBatchSeqDataIterator):
             y_meta_batch = np.reshape(y_meta_batch, (self.meta_batch_size * self.batch_size, self.seq_len))
 
             yield x_meta_batch, y_meta_batch
-'''
+
 
 class BaseExchSeqDataIterator(object):
     def __init__(self, seq_len, batch_size, dataset='mnist', set='train',
                  rng=None, infinite=True, digits=None):
-        '''
+        
         if dataset == 'fashion_mnist':
             (x_train, y_train), (x_test, y_test) = utils.load_fashion_mnist()
             if set == 'train':
@@ -323,9 +323,6 @@ class BaseExchSeqDataIterator(object):
             self.img_shape = self.x.shape[1:]
             self.input_dim = np.prod(self.img_shape)
         elif dataset == 'planes':
-        '''
-        self.dataset = dataset
-        if dataset == 'planes':
             (x_train, y_train), (x_test, y_test) = utils.load_planes()
             if set == 'train':
                 self.x = x_train
@@ -335,6 +332,8 @@ class BaseExchSeqDataIterator(object):
                 self.y = y_test
         else:
             raise ValueError('wrong dataset name')
+        
+        self.dataset = dataset
 
         if dataset == 'mnist' or dataset == 'fashion_mnist':
             self.input_dim = self.x.shape[-1]
@@ -363,10 +362,10 @@ class BaseExchSeqDataIterator(object):
         print('--------------')
 
     def get_observation_size(self):
-        if self.dataset == 'mnist' or self.dataset == 'fashion_mnist':
+        if self.dataset == 'planes':
+            return (self.seq_len,) + self.x.shape[1:]
+        else:  # self.dataset == 'mnist' or self.dataset == 'fashion_mnist':
             return (self.seq_len,) + self.img_shape
-        elif self.dataset == 'planes':
-            return (self.seq_len,) + self.x.shape
 
     def generate(self, rng=None, noise_rng=None):
         rng = self.rng if rng is None else rng
