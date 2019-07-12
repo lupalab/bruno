@@ -295,6 +295,194 @@ class OmniglotEpisodesDataIterator(OmniglotTestBatchSeqDataIterator):
 
             yield x_meta_batch, y_meta_batch
 
+class PointCloudIterator(object):
+    def __init__(self, seq_len, batch_size, dataset='mnist', set='train',
+                 rng=None, infinite=True, digits=None, subsamp=None, 
+                 noisestd=0.1, flipxy=False, permxy=False, unit_scale=False):
+        
+        if dataset == 'planes':
+            (x_train, y_train), (x_test, y_test) = utils.load_planes()
+            if set == 'train':
+                self.x = x_train
+                self.y = y_train
+            elif set == 'test':
+                self.x = x_test
+                self.y = y_test
+        else:
+            raise ValueError('wrong dataset name')        
+        
+        self.dataset = dataset
+
+        self.classes = np.unique(self.y)
+        self.n_classes = len(self.classes)
+        self.y2idxs = {}
+        self.nsamples = 0
+        for i in list(self.classes):
+            self.y2idxs[i] = np.where(self.y == i)[0]
+            self.nsamples += len(self.y2idxs[i])
+
+        self.batch_size = batch_size
+        self.seq_len = seq_len
+        self.rng = np.random.RandomState(42) if not rng else rng
+        self.infinite = infinite
+        self.digits = digits if digits is not None else np.arange(self.n_classes)
+        
+        # Augmentation vars
+        self._subsamp = subsamp
+        self._noisestd = noisestd
+        self._flipxy = flipxy
+        self._permxy = permxy
+        self._rescale_range = rng
+        self._unit_scale = unit_scale
+
+        print(set, 'dataset size:', self.x.shape)
+        print(set, 'N classes', self.n_classes)
+        print(set, 'min, max', np.min(self.x), np.max(self.x))
+        print(set, 'nsamples', self.nsamples)
+        print(set, 'digits', self.digits)
+        print('--------------')
+
+    def get_observation_size(self):
+        if self.dataset == 'planes':
+            return (self.seq_len,) + self.x.shape[1:]
+        else:
+            raise ValueError('wrong dataset name')        
+
+
+    def generate(self):
+        while True:
+            x_batch = np.zeros((self.batch_size,) + self.get_observation_size(), dtype='float32')
+            n = x_batch.shape[1]
+            transformed_sets = []
+
+            for i in range(self.batch_size):
+                idxs = self.y2idxs[0]
+                assert len(idxs) >= self.seq_len
+
+                for k in range(self.seq_len):
+                    x_batch[i, k, :] = self.x[idxs[k], :]
+
+                iset = x_batch[i,:,:]
+                if self._subsamp is not None and self._subsamp < n:
+                    iperm = np.random.permutation(n)
+                    iset = iset[iperm[:self._subsamp], :]
+                    iset -= np.mean(iset, 0, keepdims=True)
+                if self._noisestd > 0.0:
+                    iset += self._noisestd*np.random.randn(*iset.shape)
+                if self._flipxy:
+                    iset[:, :, 0] = (2.0*(np.random.rand() > 0.5)-1.0) * iset[:, :, 0]
+                    iset[:, :, 1] = (2.0*(np.random.rand() > 0.5)-1.0) * iset[:, :, 1]
+                if self._permxy and np.random.rand() > 0.5:
+                    iset = iset[:, :, [1, 0, 2]]
+                if self._rescale_range is not None:
+                    rrng = np.array(self._rescale_range)
+                    try:
+                        rmult = 1.0 + rrng*(2.0*np.random.random(len(rrng))-1.0)
+                        iset = rmult*iset
+                    except TypeError:
+                        rmult = 1.0 + rrng*(2.0*np.random.random()-1.0)
+                        iset = rmult*iset
+                if self._unit_scale:
+                    minv = np.min(iset)
+                    maxv = np.max(iset)
+                    iset = (iset-minv)/(maxv-minv)
+                iset -= np.mean(iset, 0, keepdims=True)
+                print(iset.shape)
+                transformed_sets.append(iset)
+            x_batch = np.stack(transformed_sets, 0)
+
+            yield x_batch
+
+            if not self.infinite:
+                break
+
+    # TODO: remove?
+    def generate_each_digit(self, same_image=False, noise_rng=np.random.RandomState(42), rng=None):
+        rng = self.rng if rng is None else rng
+
+        for i in range(10):
+            x_batch = np.zeros((1,) + self.get_observation_size(), dtype='float32')
+            y_batch = np.zeros((1, self.seq_len), dtype='float32')
+
+            idxs = self.y2idxs[i].copy()
+            assert len(idxs) >= self.seq_len
+            rng.shuffle(idxs)
+
+            for k in range(self.seq_len):
+                x_batch[0, k, :] = self.x[idxs[0], :] if same_image else self.x[idxs[k], :]
+                y_batch[0, k] = i
+
+            x_batch += noise_rng.uniform(size=x_batch.shape)
+            yield x_batch, y_batch
+    # TODO: remove?
+    def generate_anomaly(self, noise_rng=np.random.RandomState(42)):
+        while True:
+            x_batch = np.zeros((1,) + self.get_observation_size(), dtype='float32')
+            y_batch = np.zeros((1, self.seq_len), dtype='float32')
+
+            j = self.rng.randint(0, 10) if self.digits is None else self.rng.choice(self.digits)
+            idxs = self.y2idxs[j]
+            assert len(idxs) >= self.seq_len
+            self.rng.shuffle(idxs)
+
+            for k in range(self.seq_len):
+                x_batch[0, k, :] = self.x[idxs[k], :]
+                y_batch[0, k] = j
+
+            # true anomaly
+            j = self.rng.randint(0, 10) if self.digits is None else self.rng.choice(self.digits)
+            idx = self.rng.choice(self.y2idxs[j])
+            x_batch[0, self.seq_len - 5, :] = self.x[idx, :]
+            y_batch[0, self.seq_len - 5] = j
+
+            x_batch += noise_rng.uniform(size=x_batch.shape)
+            yield x_batch, y_batch
+
+            if not self.infinite:
+                break
+    # TODO: remove?
+    def generate_diagonal_roll(self, same_class=True, same_image=False, black_image=False, rng=None, noise_rng=None):
+        rng = self.rng if rng is None else rng
+        noise_rng = self.rng if noise_rng is None else noise_rng
+        batch_size = self.seq_len
+
+        while True:
+            x_batch = np.zeros((batch_size,) + self.get_observation_size(), dtype='float32')
+
+            j = rng.randint(0, 10) if self.digits is None else rng.choice(self.digits)
+            idxs = self.y2idxs[j]
+            assert len(idxs) >= self.seq_len
+            rng.shuffle(idxs)
+
+            sequence = np.zeros((1,) + self.get_observation_size(), dtype='float32')
+            for k in range(self.seq_len):
+                if same_image:
+                    sequence[0, k] = self.x[idxs[0]]
+                else:
+                    sequence[0, k] = self.x[idxs[k]]
+
+            if black_image:
+                sequence[0, 0] *= 0.
+            if black_image and same_image:
+                sequence *= 0.
+
+            if not same_class:
+                other_digits = list(self.digits)
+                other_digits.remove(j)
+                j2 = rng.choice(other_digits)
+                idxs = self.y2idxs[j2]
+                sequence[0, 0] = self.x[rng.choice(idxs)]
+
+            sequence += noise_rng.uniform(size=sequence.shape)
+
+            for i in range(batch_size):
+                x_batch[i] = np.roll(sequence, i, axis=1)
+
+            yield x_batch
+
+            if not self.infinite:
+                break
+
 
 class BaseExchSeqDataIterator(object):
     def __init__(self, seq_len, batch_size, dataset='mnist', set='train',
