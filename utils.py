@@ -53,10 +53,12 @@ def load_fashion_mnist():
     return (X_train, y_train), (X_test, y_test)
 '''
 
+
 def load_point_clouds(filename):
     with open(filename, 'rb') as f:
         data = pkl.load(f, encoding='latin')
     return data
+
 
 def load_planes():
     data = load_point_clouds('../data/plane.p')
@@ -64,14 +66,18 @@ def load_planes():
     y_train = [0 for x in range(np.shape(X_train)[0])]
     X_test = np.float32(data['test'])
     y_test = [0 for x in range(np.shape(X_test)[0])]
+    X_valid = np.float32(data['valid'])
+    y_valid = [0 for x in range(np.shape(X_valid)[0])]
 
     X_train -= np.mean(X_train)
     X_test -= np.mean(X_test)
+    X_valid -= np.mean(X_valid)
 
     X_train /= np.max(np.abs(X_train))
     X_test /= np.max(np.abs(X_test))
+    X_valid /= np.max(np.abs(X_valid))
 
-    return (X_train[:, :1000, :], y_train), (X_test[:, :1000, :], y_test)
+    return (X_train, y_train), (X_valid, y_valid), (X_test, y_test)
 
 
 def unpickle(file):

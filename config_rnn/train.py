@@ -252,5 +252,21 @@ with tf.Session() as sess:
                 if hasattr(config.student_layer, 'nu'):
                     nu = config.student_layer.nu.eval().flatten()
                     print('nu median-min-max:', np.median(nu), np.min(nu), np.max(nu))
+            
+            # Get test likelihood
+            if (iteration + 1) == config.max_iter:
+                print('\n Evaluating on test data ...')
+                losses = []
+                rng = np.random.RandomState(42)
+                for _, x_test_batch in zip(range(0, config.n_test_batches),
+                                            config.test_data_iter.generate()):
+                    feed_dict = {x_in_eval: x_test_batch}
+                    l = sess.run([eval_loss], feed_dict)
+                    losses.append(l)
+                avg_loss = np.mean(np.asarray(losses), axis=0)
+                print('test loss', avg_loss)
+
+                
+                
 
 print('Total time: ', time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time)))

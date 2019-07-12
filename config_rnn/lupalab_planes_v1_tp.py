@@ -24,11 +24,19 @@ train_data_iter = data_iter.PointCloudIterator(seq_len=seq_len, batch_size=batch
                                                flipxy=True, permxy=True, unit_scale=True, 
                                                dataset='planes')
 
+valid_data_iter = data_iter.PointCloudIterator(seq_len=seq_len, batch_size=batch_size,
+                                               set='valid', subsamp=1000, noisestd=0.1, 
+                                               flipxy=True, permxy=True, unit_scale=True, 
+                                               dataset='planes')
+
+test_data_iter = data_iter.PointCloudIterator(seq_len=seq_len, batch_size=batch_size,
+                                              set='test', subsamp=None, noisestd=0.0,
+                                              flipxy=False, permxy=False, unit_scale=True,
+                                              dataset='planes')
+
 #test_data_iter = data_iter.BaseExchSeqDataIterator(seq_len=seq_len, batch_size=batch_size, set='test', rng=rng_test,
 #                                                    dataset='planes')
 
-#valid_data_iter = data_iter.BaseExchSeqDataIterator(seq_len=seq_len, batch_size=batch_size,
-#                                                    set='test', rng=rng, dataset='planes')
 
 # test_data_iter2 = data_iter.BaseTestBatchSeqDataIterator(seq_len=seq_len,
 #                                                          set='test',
