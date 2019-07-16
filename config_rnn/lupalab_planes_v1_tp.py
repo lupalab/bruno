@@ -56,9 +56,9 @@ learning_rate = 0.001
 lr_decay = 0.999995
 #max_iter = 100000
 max_iter = 3
-save_every = 1000
+save_every = 3
 
-validate_every = 1000
+validate_every = 3
 n_valid_batches = 20
 
 scale_student_grad = 0.

@@ -60,13 +60,13 @@ def load_point_clouds(filename):
     return data
 
 
-def load_planes():
+def load_planes(subsamp=1000):
     data = load_point_clouds('../data/plane.p')
-    X_train = np.float32(data['train'])
+    X_train = np.float32(data['train'])[:, :subsamp, :]
     y_train = [0 for x in range(np.shape(X_train)[0])]
-    X_test = np.float32(data['test'])
+    X_test = np.float32(data['test'])[:, :subsamp, :]
     y_test = [0 for x in range(np.shape(X_test)[0])]
-    X_valid = np.float32(data['valid'])
+    X_valid = np.float32(data['valid'])[:, :subsamp, :]
     y_valid = [0 for x in range(np.shape(X_valid)[0])]
 
     X_train -= np.mean(X_train)
