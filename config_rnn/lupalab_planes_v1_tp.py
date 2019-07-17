@@ -8,13 +8,13 @@ import nn_extra_student
 from config_rnn import defaults
 
 batch_size = 10
-sample_batch_size = 1
-n_samples = 4
+sample_batch_size = 10
+n_samples = 10
 rng = np.random.RandomState(42)
 rng_test = np.random.RandomState(317070)
 eps_corr = defaults.eps_corr
 mask_dims = defaults.mask_dims
-seq_len = 10
+seq_len = 100
 
 nonlinearity = tf.nn.elu
 weight_norm = True
@@ -34,14 +34,6 @@ test_data_iter = data_iter.PointCloudIterator(batch_size=batch_size,
                                               flipxy=False, permxy=False, unit_scale=True,
                                               dataset='planes')
 
-#test_data_iter = data_iter.BaseExchSeqDataIterator(seq_len=seq_len, batch_size=batch_size, set='test', rng=rng_test,
-#                                                    dataset='planes')
-
-
-# test_data_iter2 = data_iter.BaseTestBatchSeqDataIterator(seq_len=seq_len,
-#                                                          set='test',
-#                                                          rng=rng, dataset='planes')
-
 obs_shape = train_data_iter.get_observation_size()  # (n, d)
 print('obs shape', obs_shape)
 
@@ -52,12 +44,11 @@ nu_init = 1000
 optimizer = 'rmsprop'
 learning_rate = 0.001
 lr_decay = 0.999995
-#max_iter = 100000
-max_iter = 3
-save_every = 3
+max_iter = 30000
+save_every = 1000
 
-validate_every = 3
-n_valid_batches = 1
+validate_every = 1000
+n_valid_batches = 10
 
 n_test_batches = 10
 
@@ -123,6 +114,7 @@ def build_model(x, init=False, sampling_mode=False):
                 if sampling_mode:
                     z_sample = student_layer.sample(nr_samples=n_samples)
                     z_samples.append(z_sample)
+                    print(z_sample.shape)
 
                     latent_log_prob = student_layer.get_log_likelihood(z_sample[:, 0, :])
                     latent_log_probs.append(latent_log_prob)
@@ -160,8 +152,9 @@ def build_model(x, init=False, sampling_mode=False):
             for layer in reversed(nvp_dense_layers):
                 z_samples, _, log_det_jac = layer.backward(z_samples, None, log_det_jac)
 
-            x_samples, log_det_jac = logit_layer.backward(z_samples, None, log_det_jac)
-            x_samples, log_det_jac = scale_layer.backward(x_samples, None, log_det_jac)
+            #x_samples, log_det_jac = logit_layer.backward(z_samples, None, log_det_jac)
+            #x_samples, log_det_jac = scale_layer.backward(x_samples, None, log_det_jac)
+            x_samples = z_samples
 
             x_samples = tf.reshape(x_samples,
                                    (z_samples_shape[0], z_samples_shape[1], x_shape[2], x_shape[3], x_shape[4]))
