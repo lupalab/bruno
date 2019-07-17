@@ -54,13 +54,14 @@ def load_fashion_mnist():
 '''
 
 
+
+#TODO: Generalize for other point cloud datasets
 def load_point_clouds(filename):
     with open(filename, 'rb') as f:
         data = pkl.load(f, encoding='latin')
     return data
 
-
-def load_planes(subsamp=1000):
+def load_planes(subsamp=512):
     data = load_point_clouds('../data/plane.p')
     X_train = np.float32(data['train'])[:, :subsamp, :]
     y_train = [0 for x in range(np.shape(X_train)[0])]
@@ -78,6 +79,8 @@ def load_planes(subsamp=1000):
     X_valid /= np.max(np.abs(X_valid))
 
     return (X_train, y_train), (X_valid, y_valid), (X_test, y_test)
+
+
 
 
 def unpickle(file):

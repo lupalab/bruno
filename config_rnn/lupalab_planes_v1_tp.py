@@ -12,25 +12,25 @@ sample_batch_size = 1
 n_samples = 4
 rng = np.random.RandomState(42)
 rng_test = np.random.RandomState(317070)
-seq_len = 1
 eps_corr = defaults.eps_corr
 mask_dims = defaults.mask_dims
+seq_len = 10
 
 nonlinearity = tf.nn.elu
 weight_norm = True
 
-train_data_iter = data_iter.PointCloudIterator(seq_len=seq_len, batch_size=batch_size,
-                                               set='train', subsamp=1000, noisestd=0.1, 
+train_data_iter = data_iter.PointCloudIterator(batch_size=batch_size,
+                                               set='train', subsamp=seq_len, noisestd=0.1, 
                                                flipxy=True, permxy=True, unit_scale=True, 
                                                dataset='planes')
 
-valid_data_iter = data_iter.PointCloudIterator(seq_len=seq_len, batch_size=batch_size,
-                                               set='valid', subsamp=1000, noisestd=0.1, 
+valid_data_iter = data_iter.PointCloudIterator(batch_size=batch_size,
+                                               set='valid', subsamp=seq_len, noisestd=0.1, 
                                                flipxy=True, permxy=True, unit_scale=True, 
                                                dataset='planes')
 
-test_data_iter = data_iter.PointCloudIterator(seq_len=seq_len, batch_size=batch_size,
-                                              set='test', subsamp=None, noisestd=0.0,
+test_data_iter = data_iter.PointCloudIterator(batch_size=batch_size,
+                                              set='test', subsamp=seq_len, noisestd=0.0,
                                               flipxy=False, permxy=False, unit_scale=True,
                                               dataset='planes')
 
@@ -42,12 +42,10 @@ test_data_iter = data_iter.PointCloudIterator(seq_len=seq_len, batch_size=batch_
 #                                                          set='test',
 #                                                          rng=rng, dataset='planes')
 
-seq_len = 1000
-
-obs_shape = train_data_iter.get_observation_size()  # (seq_len, 1000, 3)
+obs_shape = train_data_iter.get_observation_size()  # (n, d)
 print('obs shape', obs_shape)
 
-ndim = np.prod(obs_shape[2:])
+ndim = np.prod(obs_shape[1])
 corr_init = np.ones((ndim,), dtype='float32') * 0.1
 nu_init = 1000
 
@@ -59,7 +57,9 @@ max_iter = 3
 save_every = 3
 
 validate_every = 3
-n_valid_batches = 20
+n_valid_batches = 1
+
+n_test_batches = 10
 
 scale_student_grad = 0.
 student_grad_schedule = {0: 0., 100: 0.1}
@@ -80,11 +80,13 @@ def build_model(x, init=False, sampling_mode=False):
             student_layer = nn_extra_student.StudentRecurrentLayer(shape=(ndim,), corr_init=corr_init, nu_init=nu_init)
 
         x_shape = nn_extra_nvp.int_shape(x)
-        x = tf.reshape(x, (x_shape[0], x_shape[2], x_shape[3], 1, 1))
+        #x = tf.reshape(x, (x_shape[0], x_shape[2], x_shape[3], 1, 1))
+        x = tf.reshape(x, (x_shape[0], x_shape[1], x_shape[2], 1, 1))
         x_shape = nn_extra_nvp.int_shape(x)
 
-        x_bs = tf.reshape(x, (x_shape[0] * x_shape[1], x_shape[2], x_shape[3], x_shape[4]))
-        # x_bs = tf.reshape(x, (x_shape[0] * x_shape[2], x_shape[3], 1, 1))
+        #x_bs = tf.reshape(x, (x_shape[0] * x_shape[1], x_shape[2], x_shape[3], x_shape[4]))
+        #x_bs = tf.reshape(x, (x_shape[0] * x_shape[1], x_shape[2], 1))
+        x_bs = tf.reshape(x, (x_shape[0] * x_shape[1], x_shape[2], 1, 1))
         x_bs_shape = nn_extra_nvp.int_shape(x_bs)
         # x_shape = x_bs_shape
 

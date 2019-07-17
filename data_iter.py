@@ -297,8 +297,7 @@ class OmniglotEpisodesDataIterator(OmniglotTestBatchSeqDataIterator):
 
 
 class PointCloudIterator(object):
-    def __init__(self, seq_len, batch_size, dataset='planes', set='train',
-                 rng=None, infinite=True, digits=None, subsamp=None, 
+    def __init__(self, batch_size, dataset='planes', set='train', subsamp=None,
                  noisestd=0.1, flipxy=False, permxy=False, unit_scale=False):
 
         if dataset == 'planes':
@@ -316,6 +315,11 @@ class PointCloudIterator(object):
         else:
             raise ValueError('wrong dataset name')        
         
+        self.N = self.x.shape[0]
+        self.n = self.x.shape[1]
+        self.d = self.x.shape[2]
+        self.currN = 0  # Counter for iterating through samples
+        
         self.dataset = dataset
         self.classes = np.unique(self.y)
         self.n_classes = len(self.classes)
@@ -326,17 +330,18 @@ class PointCloudIterator(object):
             self.nsamples += len(self.y2idxs[i])
 
         self.batch_size = batch_size
-        self.seq_len = seq_len
-        self.rng = np.random.RandomState(42) if not rng else rng
-        self.infinite = infinite
-        self.digits = digits if digits is not None else np.arange(self.n_classes)
+        self.seq_len = subsamp if subsamp is not None else self.n
+
+        # TODO: deprecated?
+        self.rng = np.random.RandomState(42)
+        self.infinite = True
+        self.digits = np.arange(self.n_classes)
 
         # Augmentation vars
         self._subsamp = subsamp
         self._noisestd = noisestd
         self._flipxy = flipxy
         self._permxy = permxy
-        self._rescale_range = rng
         self._unit_scale = unit_scale
 
         print(set, 'dataset size:', self.x.shape)
@@ -348,7 +353,7 @@ class PointCloudIterator(object):
 
     def get_observation_size(self):
         if self.dataset == 'planes':
-            return (self.seq_len,) + self.x.shape[1:]
+            return (self.seq_len, self.d)
         else:
             raise ValueError('wrong dataset name')        
 
@@ -356,36 +361,25 @@ class PointCloudIterator(object):
     def generate(self):
         while True:
             x_batch = np.zeros((self.batch_size,) + self.get_observation_size(), dtype='float32')
-            n = x_batch.shape[1]
             transformed_sets = []
-
+            
             for i in range(self.batch_size):
-                idxs = self.y2idxs[0]
-                assert len(idxs) >= self.seq_len
-
-                for k in range(self.seq_len):
-                    x_batch[i, k, :] = self.x[idxs[k], :]
-
-                iset = x_batch[i,:,:]
-                if self._subsamp is not None and self._subsamp < n:
-                    iperm = np.random.permutation(n)
-                    iset = iset[iperm[:self._subsamp], :]
-                    iset -= np.mean(iset, 0, keepdims=True)
+                i_tmp = (i + self.currN) % self.N
+                if self._subsamp is not None and self._subsamp < self.n:
+                    iperm = np.random.permutation(self.n)
+                    x_batch[i, :, :] = self.x[i_tmp, iperm[:self._subsamp], :]
+                else:
+                    x_batch[i, :, :] = self.x[i_tmp, :, :]
+                
+                iset = x_batch[i, :, :]
+                iset -= np.mean(iset, 0, keepdims=True)
                 if self._noisestd > 0.0:
                     iset += self._noisestd*np.random.randn(*iset.shape)
                 if self._flipxy:
-                    iset[:, :, 0] = (2.0*(np.random.rand() > 0.5)-1.0) * iset[:, :, 0]
-                    iset[:, :, 1] = (2.0*(np.random.rand() > 0.5)-1.0) * iset[:, :, 1]
+                    iset[:, 0] = (2.0*(np.random.rand() > 0.5)-1.0) * iset[:, 0]
+                    iset[:, 1] = (2.0*(np.random.rand() > 0.5)-1.0) * iset[:, 1]
                 if self._permxy and np.random.rand() > 0.5:
-                    iset = iset[:, :, [1, 0, 2]]
-                if self._rescale_range is not None:
-                    rrng = np.array(self._rescale_range)
-                    try:
-                        rmult = 1.0 + rrng*(2.0*np.random.random(len(rrng))-1.0)
-                        iset = rmult*iset
-                    except TypeError:
-                        rmult = 1.0 + rrng*(2.0*np.random.random()-1.0)
-                        iset = rmult*iset
+                    iset = iset[:, [1, 0, 2]]
                 if self._unit_scale:
                     minv = np.min(iset)
                     maxv = np.max(iset)
@@ -393,7 +387,10 @@ class PointCloudIterator(object):
                 iset -= np.mean(iset, 0, keepdims=True)
                 transformed_sets.append(iset)
             x_batch = np.stack(transformed_sets, 0)
-
+            
+            # Reset the sample counter if necessary.
+            self.currN = (self.currN + self.batch_size + 1) % self.N
+            
             yield x_batch
 
             if not self.infinite:

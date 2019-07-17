@@ -203,7 +203,7 @@ with tf.Session() as sess:
                 losses = []
                 rng = np.random.RandomState(42)
                 for _, x_valid_batch in zip(range(0, config.n_valid_batches),
-                                            config.valid_data_iter.generate(rng)):
+                                            config.valid_data_iter.generate()):
                     feed_dict = {x_in_eval: x_valid_batch}
                     l = sess.run([eval_loss], feed_dict)
                     losses.append(l)
@@ -214,7 +214,7 @@ with tf.Session() as sess:
                 losses = []
                 rng = np.random.RandomState(42)
                 for _, x_valid_batch in zip(range(0, config.n_valid_batches * 10),
-                                            train_data_iter.generate(rng)):
+                                            train_data_iter.generate()):
                     feed_dict = {x_in_eval: x_valid_batch}
                     l = sess.run([eval_loss], feed_dict)
                     losses.append(l)
@@ -265,6 +265,7 @@ with tf.Session() as sess:
                     losses.append(l)
                 avg_loss = np.mean(np.asarray(losses), axis=0)
                 print('test loss', avg_loss)
+                break
 
                 
                 
