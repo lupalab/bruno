@@ -18,12 +18,11 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 
-#my_dpi = 1000
-
 # -----------------------------------------------------------------------------
 parser = argparse.ArgumentParser()
 parser.add_argument('--config_name', type=str, required=True, help='Configuration name')
-parser.add_argument('--seq_len', type=int, default=20, help='Sequence length')
+parser.add_argument('--exp_id', type=str, default=None, help='Experiment ID')
+parser.add_argument('--seq_len', type=int, default=512, help='Sequence length')
 parser.add_argument('--set', type=str, default='test', help='Test or train part')
 parser.add_argument('--same_image', type=int, default=0, help='Same image as input')
 parser.add_argument('--plot_n', type=int, default=0, help='Plot only last x images. 0 = plot all of them')
@@ -38,7 +37,11 @@ tf.set_random_seed(42)
 configs_dir = __file__.split('/')[-2]
 config = importlib.import_module('%s.%s' % (configs_dir, args.config_name))
 
-save_dir = utils.find_model_metadata('metadata/', args.config_name)
+exp_id = args.exp_id
+if exp_id is None:
+    save_dir = utils.find_model_metadata('metadata/', args.config_name)
+else:
+    save_dir = 'metadata/%s' % exp_id
 experiment_id = os.path.dirname(save_dir)
 
 if not os.path.isdir(save_dir + '/samples'):
@@ -74,8 +77,7 @@ with tf.Session() as sess:
         print("Generating samples", i)
         feed_dict = {x_in: x_batch}
         sampled_xx = sess.run(samples, feed_dict)
-        #img_dim = config.obs_shape[1]
-        #n_channels = config.obs_shape[-1]
+
         seq_len = config.seq_len
         N = x_batch.shape[0]
         n = x_batch.shape[1]
