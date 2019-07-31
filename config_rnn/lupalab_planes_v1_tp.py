@@ -72,12 +72,12 @@ def build_model(x, init=False, sampling_mode=False):
 
         x_shape = nn_extra_nvp.int_shape(x)
         #x = tf.reshape(x, (x_shape[0], x_shape[2], x_shape[3], 1, 1))
-        x = tf.reshape(x, (x_shape[0], x_shape[1], x_shape[2], 1, 1))
+        x = tf.reshape(x, (x_shape[0], x_shape[1], 1, 1, x_shape[-1]))
         x_shape = nn_extra_nvp.int_shape(x)
 
         #x_bs = tf.reshape(x, (x_shape[0] * x_shape[1], x_shape[2], x_shape[3], x_shape[4]))
         #x_bs = tf.reshape(x, (x_shape[0] * x_shape[1], x_shape[2], 1))
-        x_bs = tf.reshape(x, (x_shape[0] * x_shape[1], x_shape[2], 1, 1))
+        x_bs = tf.reshape(x, (x_shape[0] * x_shape[1], 1, 1, x_shape[-1]))
         x_bs_shape = nn_extra_nvp.int_shape(x_bs)
         # x_shape = x_bs_shape
 
